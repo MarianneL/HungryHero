@@ -1,5 +1,6 @@
 package screens
 {
+
 	import flash.geom.Rectangle;
 	import flash.utils.getTimer;
 	
@@ -10,6 +11,10 @@ package screens
 	import starling.display.Button;
 	import starling.display.Sprite;
 	import starling.events.Event;
+	import starling.events.Touch;
+	import starling.events.TouchEvent;
+	
+	import starling.utils.deg2rad;
 	
 	public class InGame extends Sprite
 	{
@@ -30,6 +35,10 @@ package screens
 		private var obstacleGapCount:int;
 		
 		private var gameArea:Rectangle;
+		
+		private var touch:Touch;
+		private var touchX:Number;
+		private var touchY:Number;
 		
 		private var obstaclesToAnimate:Vector.<Obstacle>;
 		
@@ -57,8 +66,10 @@ package screens
 			startButton.x = stage.stageWidth * 0.5 - startButton.width * 0.5;
 			startButton.y = stage.stageHeight * 0.5 - startButton.height * 0.5;
 			this.addChild(startButton);
+
 			
 			gameArea = new Rectangle(0, 100, stage.stageWidth, stage.stageHeight - 250);
+
 		}
 		
 		public function disposeTemporarily():void {
@@ -79,6 +90,7 @@ package screens
 			hitObstacle = 0;
 			
 			bg.speed = 0;
+
 			scoreDistance = 0;
 			obstacleGapCount = 0;
 			
@@ -95,7 +107,15 @@ package screens
 		}
 		
 		private function launchHero():void {
+			this.addEventListener(TouchEvent.TOUCH, onTounch);
 			this.addEventListener(Event.ENTER_FRAME, onGameTick);
+		}
+		
+		private function onTounch(event:TouchEvent):void {
+			touch = event.getTouch(stage);
+			
+			touchX = touch.globalX;
+			touchY = touch.globalY;
 		}
 		
 		private function onGameTick(event:Event):void {
@@ -111,8 +131,31 @@ package screens
 					}
 					break;
 				case "flying":
+					
+					if(hitObstacle <= 0) {
+						hero.y -= (hero.y - touchY) * 0.1;
+						
+						if(-(hero.y - touchY) < 150 && -(hero.y - touchY) > -150) {
+							hero.rotation = deg2rad(-(hero.y - touchY) * 0.2);
+						}
+						
+						if(hero.y > gameArea.bottom - hero.height * 0.5) {
+							hero.y = gameArea.bottom - hero.height * 0.5;
+							hero.rotation = deg2rad(0);
+						}
+						
+						if(hero.y < gameArea.top + hero.height * 0.5) {
+							hero.y = gameArea.top + hero.height * 0.5;
+							hero.rotation = deg2rad(0);
+						}
+					} else {
+						hitObstacle--;
+						cameraShake();
+					}
+					
 					playerSpeed -= (playerSpeed - MIN_SPEED) * 0.01;
 					bg.speed = playerSpeed * elapsed;
+
 					
 					scoreDistance += (playerSpeed * elapsed) * 0.1;
 					
@@ -125,12 +168,29 @@ package screens
 			}
 		}
 		
+		private function cameraShake():void {
+			if(hitObstacle > 0) {
+				this.x = Math.random() * hitObstacle;
+				this.y = Math.random() * hitObstacle;
+			} else if(x != 0) {
+				this.x = 0;
+				this.y = 0;
+			}
+		}
+		
 		private function animateObstacles():void
 		{
 			var obstacleToTrack:Obstacle;
 			
 			for(var i:uint = 0; i < obstaclesToAnimate.length; i++) {
 				obstacleToTrack = obstaclesToAnimate[i];
+				
+				if(obstacleToTrack.alreadyHit == false && obstacleToTrack.bounds.intersects(hero.bounds)) {
+					obstacleToTrack.alreadyHit = true;
+					obstacleToTrack.rotation = deg2rad(70);
+					hitObstacle = 30;
+					playerSpeed *= 0.5;
+				}
 				
 				if(obstacleToTrack.distance > 0) {
 					obstacleToTrack.distance -= playerSpeed * elapsed;
@@ -177,6 +237,7 @@ package screens
 			obstaclesToAnimate.push(obstacle);
 		}
 		
+
 		private function checkElapsed(event:Event):void {
 			timePrevious = timeCurrent;
 			timeCurrent = getTimer();
