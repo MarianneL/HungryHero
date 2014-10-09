@@ -23,6 +23,9 @@ package
 		[Embed(source="../media/graphics/mySpritesheet.xml", mimeType="application/octet-stream")]
 		public static const AtlasXmlGame:Class;
 		
+		[Embed(source="../media/fonts/embedded/WELTRON2.TTF", fontFamily="MyFontName", embedAsCFF="false")]
+		public static var MyFont:Class;
+		
 		public static function getAtlas():TextureAtlas {
 			if(gameTextureAtlas == null) {
 				var texture:Texture = getTexture("AtlasTextureGame");

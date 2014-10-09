@@ -6,15 +6,15 @@ package screens
 	
 	import objects.GameBackground;
 	import objects.Hero;
-	import objects.Obstacle;
 	import objects.Item;
+	import objects.Obstacle;
 	
 	import starling.display.Button;
 	import starling.display.Sprite;
 	import starling.events.Event;
 	import starling.events.Touch;
 	import starling.events.TouchEvent;
-	
+	import starling.text.TextField;
 	import starling.utils.deg2rad;
 	
 	public class InGame extends Sprite
@@ -44,6 +44,11 @@ package screens
 		private var obstaclesToAnimate:Vector.<Obstacle>;
 		private var itemsToAnimate:Vector.<Item>;
 		
+		private var scoreText:TextField;
+		
+		import starling.utils.HAlign;
+		import starling.utils.VAlign;
+		
 		public function InGame()
 		{
 			super();
@@ -53,6 +58,13 @@ package screens
 		private function onAddedToStage(event:Event):void {
 			this.removeEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
 			drawGame();
+			
+			scoreText = new TextField(300, 100, "Score: 0", "MyFontName", 24, 0xffffff);
+			/*scoreText.hAlign = HAlign.LEFT;
+			scoreText.vAlign = VAlign.TOP;
+			scoreText.x = 20;
+			scoreText.y = 20;*/
+			this.addChild(scoreText);
 		}
 		
 		private function drawGame():void {
@@ -161,6 +173,8 @@ package screens
 
 					
 					scoreDistance += (playerSpeed * elapsed) * 0.1;
+					
+					scoreText.text = "Score: " + scoreDistance;
 					
 					initObstacle();
 					animateObstacles();
